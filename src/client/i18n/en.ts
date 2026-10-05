@@ -584,6 +584,7 @@ export const en = {
   'task.repeatsMinutes': 'Repeats every {count} min · ',
   'task.repeatsHours': 'Repeats every {count} hr · ',
   'task.statusScheduled': 'Scheduled',
+  'task.statusRetrying': 'Failed, retrying at {time}',
   'task.statusCompleted': 'Completed',
   'task.statusRunning': 'Running',
   'task.statusQueued': 'Queued',

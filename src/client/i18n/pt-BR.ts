@@ -586,6 +586,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'task.repeatsMinutes': 'Repete a cada {count} min · ',
   'task.repeatsHours': 'Repete a cada {count} h · ',
   'task.statusScheduled': 'Agendada',
+  'task.statusRetrying': 'Falhou, repete às {time}',
   'task.statusCompleted': 'Concluída',
   'task.statusRunning': 'Em execução',
   'task.statusQueued': 'Na fila',
