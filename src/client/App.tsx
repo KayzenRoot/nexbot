@@ -1,4 +1,5 @@
 import { openPageLink } from './page-navigation';
+import { CommandPalette } from './CommandPalette';
 import { SpaceNav } from './SpaceNav';
 import { SpaceWorkspace } from './SpaceWorkspace';
 import { useCallback, useEffect, useState, useRef } from 'react';
@@ -134,6 +135,21 @@ export function App() {
   const [createdThread, setCreatedThread] = useState<Conversation>();
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState('');
+  const [palette, setPalette] = useState(false);
+  useEffect(() => {
+    const shortcut = (event: KeyboardEvent) => {
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        event.key.toLocaleLowerCase() === 'k' &&
+        !event.isComposing
+      ) {
+        event.preventDefault();
+        setPalette(true);
+      }
+    };
+    window.addEventListener('keydown', shortcut);
+    return () => window.removeEventListener('keydown', shortcut);
+  }, []);
   const [taskDetail, setTaskDetail] = useState<Detail>();
   const refresh = useCallback(async () => {
     try {
@@ -595,6 +611,16 @@ export function App() {
             </strong>
           </div>
           <div className="top-actions">
+            <button
+              className="palette-button"
+              aria-label="Search and commands (Control K)"
+              title="Search and commands (Ctrl/⌘ K)"
+              onClick={() => setPalette(true)}
+            >
+              <Search size={15} />
+              <span>Search</span>
+              <kbd>⌘K</kbd>
+            </button>
             <span className="mode-badge">
               {configured ? t('topbar.selfHosted') : t('topbar.setupRequired')}
             </span>
@@ -1000,6 +1026,39 @@ export function App() {
           onClose={() => setDialog(undefined)}
           mutate={mutate}
           onDotDeleted={(id) => void dotDeleted(id)}
+        />
+      )}
+      {workspace && (
+        <CommandPalette
+          open={palette}
+          spaceId={spaceId || workspace.spaces[0]?.id || ''}
+          workspace={workspace}
+          onClose={() => setPalette(false)}
+          onOpenPage={(space, page) => openPage(space, page)}
+          onOpenSpace={(space) => openPage(space)}
+          onNewPage={() =>
+            void (async () => {
+              const target = spaceId || workspace.spaces[0]?.id;
+              if (!target) return;
+              try {
+                const next = await api<{ id: string }>(
+                  `/spaces/${target}/pages`,
+                  'POST',
+                  { title: 'Untitled page', content: '', parentId: null },
+                );
+                openPage(target, next.id);
+              } catch (e) {
+                setError(
+                  e instanceof Error ? e.message : 'Could not create page.',
+                );
+              }
+            })()
+          }
+          onNewSpace={() => setDialog({ type: 'space' })}
+          onOpenDot={(dotId) => {
+            const next = workspace.dots.find((item) => item.id === dotId);
+            if (next) chooseDot(next);
+          }}
         />
       )}
     </div>
