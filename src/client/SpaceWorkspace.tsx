@@ -4,6 +4,7 @@ import type { Page } from '../server/pages';
 import type { Space, WorkspaceState } from '../shared/types';
 import { api } from './api';
 import { SpaceLibrary } from './SpaceLibrary';
+import { SpaceTrash } from './SpaceTrash';
 import { PageDocument } from './PageDocument';
 import { PageOutline } from './PageOutline';
 import { useTranslation } from './i18n';
@@ -42,6 +43,17 @@ export function SpaceWorkspace({
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [outline, setOutline] = useState(false);
+  const refresh = useCallback(async () => {
+    try {
+      const next = await api<Page[]>(`/spaces/${space.id}/pages`);
+      removed.current.clear();
+      setPages(next);
+      setLoaded(true);
+      setError('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load pages.');
+    }
+  }, [space.id]);
   useEffect(() => {
     let active = true;
     let loading = false;
@@ -134,12 +146,15 @@ export function SpaceWorkspace({
         </div>
       )}
       {!pageId ? (
-        <SpaceLibrary
-          space={space}
-          pages={pages}
-          onPage={onPage}
-          onNew={() => void create(null)}
-        />
+        <>
+          <SpaceLibrary
+            space={space}
+            pages={pages}
+            onPage={onPage}
+            onNew={() => void create(null)}
+          />
+          <SpaceTrash spaceId={space.id} onChanged={() => void refresh()} />
+        </>
       ) : page ? (
         <div className="space-writing-layout">
           {outline && (

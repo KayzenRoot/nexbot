@@ -455,6 +455,9 @@ export const en = {
   'doc.menuNewSubpage': 'New subpage',
   'doc.menuDownload': 'Download Markdown',
   'doc.menuOpenSource': 'Open source conversation',
+  'doc.moveToTrash': 'Move to Trash',
+  'doc.trashConfirm':
+    'Move "{title}" to Trash? You can restore it from the Space library. Any subpages will move to this page's parent.',
   'doc.menuDelete': 'Delete page',
   'doc.deleteConfirm':
     'Delete "{title}"? This can\'t be undone. Any subpages will move to this page\'s parent.',

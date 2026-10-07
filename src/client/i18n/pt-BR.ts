@@ -457,6 +457,9 @@ export const ptBR: Record<keyof typeof en, string> = {
   'doc.menuNewSubpage': 'Nova subpágina',
   'doc.menuDownload': 'Baixar Markdown',
   'doc.menuOpenSource': 'Abrir a conversa de origem',
+  'doc.moveToTrash': 'Mover para a lixeira',
+  'doc.trashConfirm':
+    'Mover "{title}" para a lixeira? Você pode restaurar depois pela biblioteca do Espaço. As subpáginas vão para a página acima.',
   'doc.menuDelete': 'Excluir página',
   'doc.deleteConfirm':
     'Excluir "{title}"? Isso não pode ser desfeito. As subpáginas vão para a página acima.',

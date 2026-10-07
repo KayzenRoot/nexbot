@@ -50,7 +50,7 @@ const props = () => ({
   onCreateDot: vi.fn(),
 });
 const deletion = () =>
-  menu.items.find((item) => item.label === 'Delete page')!.action;
+  menu.items.find((item) => item.label === 'Move to Trash')!.action;
 
 beforeEach(() => {
   api.mockReset();

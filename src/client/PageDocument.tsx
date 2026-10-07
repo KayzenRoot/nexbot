@@ -23,6 +23,7 @@ import { DocumentMenu } from './editor/DocumentMenu';
 import { PageTitleField } from './editor/PageTitleField';
 import { PageConversation } from './PageConversation';
 import { useTranslation } from './i18n';
+import { PageHistory } from './PageHistory';
 const RichEditor = lazy(() => import('./editor/RichEditor'));
 export function PageDocument({
   page,
@@ -215,11 +216,11 @@ export function PageDocument({
                   ]
                 : []),
               {
-                label: t('doc.menuDelete'),
+                label: t('doc.moveToTrash'),
                 action: async () => {
                   if (
                     !window.confirm(
-                      t('doc.deleteConfirm', {
+                      t('doc.trashConfirm', {
                         title: draft.title || t('doc.untitled'),
                       }),
                     )
@@ -315,6 +316,15 @@ export function PageDocument({
                 </button>
               </div>
             )}
+            <PageHistory
+              page={page}
+              onRestored={(next) => {
+                controller.receive(next);
+                controller.useLatest();
+                onSaved(next);
+                setNotice('');
+              }}
+            />
             <PageTitleField
               value={draft.title}
               onChange={(title) => controller.edit({ title })}
