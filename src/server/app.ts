@@ -3,7 +3,8 @@ import { modelRoutes } from './model-routes.js';
 import { dotModelRoutes } from './dot-model-routes.js';
 import { UpdateChecker, updateRoutes } from './update-routes.js';
 import { skillRoutes } from './skill-routes.js';
-import { connectionRoutes } from './connection-routes.js';
+import { connectionRoutes, oauthCallbackRoute } from './connection-routes.js';
+import { OAUTH_CALLBACK_PATH } from './connection-oauth.js';
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { timingSafeEqual } from 'node:crypto';
@@ -202,8 +203,14 @@ export function createApp({
   if (platform)
     app.route(
       '/api',
-      connectionRoutes(platform.workspace, platform.connections),
+      connectionRoutes(
+        platform.workspace,
+        platform.connections,
+        platform.config.publicUrl,
+      ),
     );
+  if (platform)
+    app.route(OAUTH_CALLBACK_PATH, oauthCallbackRoute(platform.connections));
   const voice = platform ? new VoiceService(platform) : undefined;
   if (platform && voice) app.route('/api', workspaceRoutes(platform, voice));
   app.get('/api/state', (c) =>

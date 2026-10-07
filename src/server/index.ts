@@ -20,6 +20,7 @@ import {
   agentRunTimeoutMsFromEnv,
   extraHeadersFromEnv,
   type PlatformConfig,
+  publicUrlFromEnv,
 } from './platform-config.js';
 import { dotModelApiFromEnv } from './model-api.js';
 // This fork sends nothing to CopilotKit. The MIT runtime and client packages
@@ -87,6 +88,7 @@ const config: PlatformConfig = {
   telegramDotId: process.env.TELEGRAM_DOT_ID || undefined,
   runtimeUrl: `http://${host === '::1' ? '[::1]' : '127.0.0.1'}:${port}/api/copilotkit`,
   ownerToken,
+  publicUrl: publicUrlFromEnv(process.env.PUBLIC_URL),
 };
 const pool = createPool(databaseUrl);
 try {

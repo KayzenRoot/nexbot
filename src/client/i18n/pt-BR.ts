@@ -277,7 +277,16 @@ export const ptBR: Record<keyof typeof en, string> = {
   'connections.requestFailed': 'A solicitação falhou.',
   'connections.title': 'Conexões',
   'connections.help':
-    'Dê a este Dot ferramentas de servidores MCP. Ferramentas somente leitura rodam sozinhas; qualquer outra coisa pede sua confirmação no chat antes de rodar. Os tokens ficam no servidor.',
+    'Dê a este Dot ferramentas de servidores MCP. Ferramentas somente leitura rodam sozinhas; qualquer outra coisa pede sua confirmação no chat antes de rodar. Se um servidor precisar de conta, deixe o token vazio e entre. Os tokens ficam no servidor.',
+  'connections.signedIn': ' · conectado',
+  'connections.waitingSignIn': ' · aguardando login…',
+  'connections.needsSignIn': ' · precisa de login',
+  'connections.signIn': 'Entrar',
+  'connections.signOut': 'Sair',
+  'connections.signInBlocked': 'Seu navegador bloqueou a aba de login.',
+  'connections.openSignIn': 'Abrir login',
+  'connections.signInToSeeTools':
+    'Entre para ver e usar as ferramentas deste serviço.',
   'connections.tokenSaved': ' · token salvo',
   'connections.refreshAria': 'Atualizar as ferramentas de {name}',
   'connections.removeAria': 'Remover {name}',

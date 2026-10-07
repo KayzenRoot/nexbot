@@ -275,7 +275,16 @@ export const en = {
   'connections.requestFailed': 'Request failed.',
   'connections.title': 'Connections',
   'connections.help':
-    'Give this Dot tools from MCP servers. Read-only tools run on their own; anything else asks you in chat before it runs. Tokens stay on the server.',
+    'Give this Dot tools from MCP servers. Read-only tools run on their own; anything else asks you in chat before it runs. If a server needs an account, leave the token empty and sign in. Tokens stay on the server.',
+  'connections.signedIn': ' · signed in',
+  'connections.waitingSignIn': ' · waiting for sign-in…',
+  'connections.needsSignIn': ' · needs sign-in',
+  'connections.signIn': 'Sign in',
+  'connections.signOut': 'Sign out',
+  'connections.signInBlocked': 'Your browser blocked the sign-in tab.',
+  'connections.openSignIn': 'Open sign-in',
+  'connections.signInToSeeTools':
+    'Sign in to see and use this service’s tools.',
   'connections.tokenSaved': ' · token saved',
   'connections.refreshAria': 'Refresh {name} tools',
   'connections.removeAria': 'Remove {name}',
