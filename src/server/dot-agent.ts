@@ -350,6 +350,21 @@ export class DotAgent extends AbstractAgent {
           baseURL: effective.baseUrl ?? 'https://api.openai.com/v1',
           api: modelApi,
           maxRetries: 1,
+          // Reasoning models spend output tokens thinking before answering, so
+          // without an explicit budget the provider defaults too low and the
+          // response truncates mid-tool-loop.
+          fetch: (input, init) => {
+            const parsed =
+              init?.body && typeof init.body === 'string'
+                ? JSON.parse(init.body)
+                : undefined;
+            if (parsed && parsed.max_tokens === undefined)
+              parsed.max_tokens = 16384;
+            return fetch(input, {
+              ...init,
+              body: parsed ? JSON.stringify(parsed) : init?.body,
+            });
+          },
           // Gateways such as OpenCode Go require routing headers (for example
           // `x-opencode-session`) on /chat/completions.
           ...(this.config.extraHeaders

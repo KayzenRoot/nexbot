@@ -189,7 +189,13 @@ export function startMexcMcpServer(options = {}) {
     options.port ?? (Number(process.env.MEXC_MCP_PORT) || DEFAULT_PORT);
   const host = '127.0.0.1';
   // Filled in once the socket is bound (port may be 0 = ephemeral).
-  let allowedHosts = [`${host}:${port}`, `localhost:${port}`];
+  // host.docker.internal is allowed so the NexBot container can reach this
+  // server through Docker Desktop's host alias.
+  let allowedHosts = [
+    `${host}:${port}`,
+    `localhost:${port}`,
+    `host.docker.internal:${port}`,
+  ];
 
   const httpServer = createHttpServer((req, res) => {
     let pathname = '/';
@@ -271,7 +277,11 @@ export function startMexcMcpServer(options = {}) {
       const address = httpServer.address();
       const boundPort =
         typeof address === 'object' && address ? address.port : port;
-      allowedHosts = [`${host}:${boundPort}`, `localhost:${boundPort}`];
+      allowedHosts = [
+        `${host}:${boundPort}`,
+        `localhost:${boundPort}`,
+        `host.docker.internal:${boundPort}`,
+      ];
       resolve({
         port: boundPort,
         close: () =>
