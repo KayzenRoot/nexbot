@@ -359,7 +359,7 @@ export class DotAgent extends AbstractAgent {
                 ? JSON.parse(init.body)
                 : undefined;
             if (parsed && parsed.max_tokens === undefined)
-              parsed.max_tokens = 16384;
+              parsed.max_tokens = 65536;
             return fetch(input, {
               ...init,
               body: parsed ? JSON.stringify(parsed) : init?.body,
