@@ -37,7 +37,10 @@ export async function probeProvider(
       body: JSON.stringify({
         model: config.model,
         messages: [{ role: 'user', content: 'Reply with OK.' }],
-        max_tokens: 4,
+        // Streamed on purpose: the runtime streams too, and some gateways
+        // (9Router combos over reasoning models) answer a non-stream probe
+        // with a 502 even though the same model streams fine.
+        stream: true,
       }),
       signal: AbortSignal.timeout(20000),
     });
