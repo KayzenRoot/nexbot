@@ -102,6 +102,9 @@ export function createMexcMcpServer(options = {}) {
     'mexc_ticker',
     {
       title: 'MEXC futures ticker',
+      // Public market data: read-only, so the connection layer does not gate
+      // every call behind owner approval (annotations drive readOnlyHint).
+      annotations: { readOnlyHint: true },
       description:
         'Latest price snapshot for one MEXC futures (perpetual) symbol: last price, 24h change (fraction, e.g. 0.0016 = +0.16%), 24h high/low, 24h volume and turnover. Use for the current market price, momentum and volatility checks. Symbol format: uppercase BASE_QUOTE, e.g. BTC_USDT.',
       inputSchema: tickerArgs,
@@ -113,6 +116,7 @@ export function createMexcMcpServer(options = {}) {
     'mexc_klines',
     {
       title: 'MEXC futures klines',
+      annotations: { readOnlyHint: true },
       description:
         'Candlestick (OHLCV) data for a MEXC futures symbol. Use for technical analysis: trends, S/R, indicators. Interval examples: Min15, Hour1, Hour4, Day1. Returns up to `limit` candles in ascending time order; `time` is a unix timestamp in seconds and volume is in contracts.',
       inputSchema: klineArgs,
@@ -126,6 +130,7 @@ export function createMexcMcpServer(options = {}) {
     'mexc_orderbook',
     {
       title: 'MEXC futures order book',
+      annotations: { readOnlyHint: true },
       description:
         'Current order book for a MEXC futures symbol: up to `limit` ranked bid and ask levels with price and volume. Use for liquidity, spread, and immediate support/resistance around the touch. Max 100 levels per side.',
       inputSchema: orderbookArgs,
@@ -137,6 +142,7 @@ export function createMexcMcpServer(options = {}) {
     'mexc_funding',
     {
       title: 'MEXC futures funding rate',
+      annotations: { readOnlyHint: true },
       description:
         'Current funding rate and next settlement time for a MEXC perpetual futures symbol. Use to gauge long/short crowding and carry: a positive rate means longs pay shorts at settlement (repeats every collectCycleHours, usually 8).',
       inputSchema: fundingArgs,
