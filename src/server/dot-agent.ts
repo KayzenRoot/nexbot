@@ -1,5 +1,6 @@
 import { parallelSources } from './parallel.js';
 import { pageReviewTool } from '../shared/page-review.js';
+import { randomUUID } from 'node:crypto';
 import { ComputerService } from './computer-service.js';
 import { computerTools } from './computer-tools.js';
 import { ConnectionService } from './connections.js';
@@ -37,6 +38,25 @@ const channelError = () => ({
   message:
     'NexBot could not complete this request. Please check the app and try again.',
 });
+
+/**
+ * DeepSeek reasoning models sometimes stream the entire final answer on
+ * reasoning_content with an empty content, so a run ends with hundreds of
+ * reasoning events and no visible text — the user sees an empty reply and
+ * Postgres stores a reasoning-only message (issue #114). The rescue asks the
+ * model once more, feeding its own reasoning draft back, and only forwards
+ * the run's RUN_FINISHED after that attempt. One attempt per run, best
+ * effort: any rescue failure still delivers the original finished event.
+ */
+const RESCUE_MIN_REASONING_CHARS = 80;
+const RESCUE_SHORT_ANSWER_CHARS = 200;
+const RESCUE_MIN_LONG_REASONING_CHARS = 500;
+// The reasoning draft is the rescue's only source material, so keep a
+// generous tail — the desk's BTC analyses run ~15-20k chars and the tool
+// analysis (funding, order book) tends to sit early in the reasoning.
+const RESCUE_DRAFT_MAX_CHARS = 20000;
+const rescueInstruction = (draft: string) =>
+  `Your previous reply reached the user only as hidden reasoning, so they saw no visible answer. Reply now with the final answer to their last message as plain visible text. Build it from the conclusions in your own reasoning draft below; do not call tools, do not restate the reasoning, and do not apologize. Answer in the user's language. Reasoning draft (may be truncated):\n${draft}`;
 export class DotAgent extends AbstractAgent {
   private inner?: BuiltInAgent;
   private controller?: AbortController;
@@ -450,6 +470,88 @@ export class DotAgent extends AbstractAgent {
               });
             },
           });
+          // Issue #114 rescue state: how much text and reasoning this run
+          // produced, and whether the one-shot rescue already ran.
+          let textChars = 0;
+          let reasoningChars = 0;
+          let rescueReasoning = '';
+          let rescueAttempted = false;
+          let rescueRunning = false;
+          const rescueEligible = () =>
+            textChars === 0
+              ? reasoningChars >= RESCUE_MIN_REASONING_CHARS
+              : textChars < RESCUE_SHORT_ANSWER_CHARS &&
+                reasoningChars >= RESCUE_MIN_LONG_REASONING_CHARS;
+          // Re-asks the model once for the final answer as visible text,
+          // streaming it as TEXT_MESSAGE_CHUNK events — the same shape
+          // convertTanStackStream produces, so runAgent assembles and
+          // persists the message like any other.
+          const rescueAnswer = async (draft: string): Promise<BaseEvent[]> => {
+            const events: BaseEvent[] = [];
+            const converted = convertInputToTanStackAI({
+              ...input,
+              messages: input.messages.filter(
+                (message) =>
+                  message.role !== 'system' && message.role !== 'developer',
+              ),
+            });
+            const stream = chat({
+              adapter,
+              messages: [
+                ...converted.messages,
+                { role: 'user', content: rescueInstruction(draft) },
+              ],
+              systemPrompts: [prompt, ...converted.systemPrompts],
+              abortController: controller,
+              threadId: input.threadId,
+              runId: input.runId,
+              modelOptions: modelOptionsFor(modelApi),
+              tools: [],
+            });
+            const messageId = randomUUID();
+            for await (const chunk of stream) {
+              if (controller.signal.aborted) break;
+              if (chunk.type === 'RUN_ERROR')
+                throw new Error(
+                  typeof chunk.message === 'string'
+                    ? chunk.message
+                    : 'The rescue turn failed.',
+                );
+              if (
+                chunk.type === 'TEXT_MESSAGE_CONTENT' &&
+                typeof chunk.delta === 'string' &&
+                chunk.delta
+              )
+                events.push({
+                  type: EventType.TEXT_MESSAGE_CHUNK,
+                  role: 'assistant',
+                  messageId,
+                  delta: chunk.delta,
+                });
+            }
+            return events;
+          };
+          const deliverRescue = (finishedEvent: BaseEvent) => {
+            rescueRunning = true;
+            void (async () => {
+              try {
+                check();
+                for (const chunkEvent of await rescueAnswer(
+                  rescueReasoning.trim().slice(-RESCUE_DRAFT_MAX_CHARS),
+                )) {
+                  observe(chunkEvent);
+                  subscriber.next(chunkEvent);
+                }
+              } catch {
+                // Best effort: the original run already finished, so deliver
+                // it unchanged rather than failing the turn twice.
+              }
+              if (!subscriber.closed) {
+                subscriber.next(finishedEvent);
+                subscriber.complete();
+              }
+            })();
+          };
           subscription = this.inner
             .run({
               ...input,
@@ -473,6 +575,30 @@ export class DotAgent extends AbstractAgent {
                   event.type === EventType.RUN_FINISHED
                 )
                   finished = true;
+                if (event.type === EventType.TEXT_MESSAGE_CHUNK) {
+                  const delta = (event as { delta?: unknown }).delta;
+                  if (typeof delta === 'string') textChars += delta.length;
+                }
+                if (event.type === EventType.REASONING_MESSAGE_CONTENT) {
+                  const delta = (event as { delta?: unknown }).delta;
+                  if (typeof delta === 'string' && delta) {
+                    reasoningChars += delta.length;
+                    // Keep only the tail; the instruction already warns the
+                    // model the draft may be truncated.
+                    rescueReasoning = `${rescueReasoning}${delta}`.slice(
+                      -RESCUE_DRAFT_MAX_CHARS,
+                    );
+                  }
+                }
+                if (
+                  event.type === EventType.RUN_FINISHED &&
+                  !rescueAttempted &&
+                  rescueEligible()
+                ) {
+                  rescueAttempted = true;
+                  deliverRescue(event);
+                  return;
+                }
                 subscriber.next(
                   this.channel && event.type === EventType.RUN_ERROR
                     ? channelError()
@@ -487,6 +613,8 @@ export class DotAgent extends AbstractAgent {
                 } else subscriber.error(error);
               },
               complete: () => {
+                // The rescue owns completion once it holds the finished event.
+                if (rescueRunning) return;
                 if (controller.signal.aborted && !finished)
                   observe({ type: EventType.RUN_ERROR });
                 subscriber.complete();
