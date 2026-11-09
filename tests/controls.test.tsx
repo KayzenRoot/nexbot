@@ -3,11 +3,16 @@ import { expect, it } from 'vitest';
 import { TaskActions } from '../src/client/TaskActions';
 import { statusLabel } from '../src/client/TaskPresentation';
 import type { Settings, Task } from '../src/shared/types';
+import { setLocalePreference } from '../src/client/i18n';
+
+// These assertions cover the English copy; pin it regardless of the machine.
+setLocalePreference('en');
 const settings: Settings = {
   name: 'Dot',
   paused: false,
   researchAllowed: true,
   memoryAllowed: true,
+  appsAllowed: false,
 };
 const task: Task = {
   id: 'one',
@@ -90,4 +95,28 @@ it('renders the Brazilian Portuguese copy when that language is active', () => {
   expect(html).toContain('Pausar agendamento');
   expect(html).toContain('Editar agendamento');
   expect(html).not.toContain('Pause schedule');
+});
+it('adds the date to the retry label when the next run is not today', () => {
+  const tomorrow: Task = {
+    ...task,
+    status: 'failed',
+    nextRunAt: Date.now() + 86400000,
+  };
+  expect(statusLabel(tomorrow)).toContain(
+    new Date(tomorrow.nextRunAt!).toLocaleDateString([], {
+      month: 'short',
+      day: 'numeric',
+    }),
+  );
+  const today: Task = {
+    ...task,
+    status: 'failed',
+    nextRunAt: Date.now() + 60000,
+  };
+  expect(statusLabel(today)).not.toContain(
+    new Date(today.nextRunAt!).toLocaleDateString([], {
+      month: 'short',
+      day: 'numeric',
+    }),
+  );
 });

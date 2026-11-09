@@ -52,7 +52,7 @@ export const statusLabel = (task: Task) =>
         })
       : statusKeys[task.status]
         ? translateMessage(statusKeys[task.status])
-      : task.status.charAt(0).toUpperCase() + task.status.slice(1);
+        : task.status.charAt(0).toUpperCase() + task.status.slice(1);
 export function Status({ task }: { task: Task }) {
   useTranslation();
   return (
