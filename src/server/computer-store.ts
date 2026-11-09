@@ -13,9 +13,13 @@ export class ComputerStore {
     const row = this.db
       .prepare('SELECT value FROM computer_permissions WHERE dotId=?')
       .get(id);
+    // Computers are enabled from the start: the owner who installed NexBot
+    // wants each Dot able to use its isolated computer without a toggle. The
+    // container itself still starts on demand (first action), so an unused
+    // Dot costs nothing.
     return row
       ? JSON.parse(String(row.value))
-      : { enabled: false, browser: false, files: false, shell: false };
+      : { enabled: true, browser: true, files: true, shell: true };
   }
   patch(id: string, patch: Partial<ComputerPermissions>) {
     const value = { ...this.permissions(id), ...patch };

@@ -18,6 +18,7 @@ function fixture(deadline = 1000) {
   const calls: { url: string; init?: RequestInit }[] = [];
   let paused = false;
   let endpoint: string | undefined;
+  let stopped = false;
   let actionHandler: (
     url: string,
     init?: RequestInit,
@@ -30,7 +31,7 @@ function fixture(deadline = 1000) {
         computers: workspace.dots().map((dot) => ({
           botId: dot.id,
           container: `nexbot-computer-${dot.id}`,
-          status: 'running',
+          status: stopped ? 'stopped' : 'running',
           ...(endpoint ? { url: endpoint } : {}),
         })),
       });
@@ -86,21 +87,24 @@ function fixture(deadline = 1000) {
     setEndpoint: (value: string) => {
       endpoint = value;
     },
+    setStopped: (value: boolean) => {
+      stopped = value;
+    },
     handle: (fn: typeof actionHandler) => {
       actionHandler = fn;
     },
   };
 }
-it('defaults every permission off and persists policy and metadata-only audit across restart', () => {
+it('defaults every permission on and persists policy and metadata-only audit across restart', () => {
   const dir = mkdtempSync(join(tmpdir(), 'computers-'));
   const path = join(dir, 'db');
   let workspace = new WorkspaceStore(path, 'owner');
   const id = workspace.dots()[0].id;
   expect(workspace.computers.permissions(id)).toEqual({
-    enabled: false,
-    browser: false,
-    files: false,
-    shell: false,
+    enabled: true,
+    browser: true,
+    files: true,
+    shell: true,
   });
   workspace.computers.patch(id, { enabled: true, files: true });
   const audit = workspace.computers.begin(id, 'files_write', 'agent');
@@ -115,6 +119,19 @@ it('defaults every permission off and persists policy and metadata-only audit ac
   workspace.close();
   rmSync(dir, { recursive: true });
 });
+it('starts a stopped computer on the first action instead of failing', async () => {
+  const f = fixture();
+  f.setStopped(true);
+  f.handle(async () => Response.json({ text: 'ok' }));
+  await expect(
+    f.service.action(f.id, 'exec', { command: 'date -u' }, 'agent'),
+  ).resolves.toMatchObject({ text: 'ok' });
+  const ensureIndex = f.calls.findIndex((call) => call.url.endsWith('/ensure'));
+  const execIndex = f.calls.findIndex((call) => call.url.endsWith('/exec'));
+  expect(ensureIndex).toBeGreaterThan(-1);
+  expect(execIndex).toBeGreaterThan(ensureIndex);
+});
+
 it('status never provisions and actions use per-Dot derived credentials with audit before dispatch', async () => {
   const f = fixture();
   f.config.computerToken = '  master-secret  ';

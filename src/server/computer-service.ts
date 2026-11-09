@@ -195,9 +195,17 @@ export class ComputerService {
   }
   private async running(id: string, signal?: AbortSignal) {
     const state = await this.existing(id, signal);
-    if (!state || state.status !== 'running')
-      throw new Error('Start this Dot’s computer first.');
-    return this.endpoint(id, state);
+    if (state && state.status === 'running') return this.endpoint(id, state);
+    // Enabled means ready: the first action provisions the container instead
+    // of failing with "start it first". Callers already checked permissions,
+    // and a cold start (image extraction + volumes) is bounded by the
+    // supervisor deadline; later starts answer in seconds.
+    const ensured = await this.supervisor(
+      `/computers/${id}/ensure`,
+      {},
+      signal,
+    );
+    return this.endpoint(id, ensured);
   }
   async status(id: string): Promise<ComputerStatus> {
     this.requireDot(id);
