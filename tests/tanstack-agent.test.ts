@@ -167,10 +167,12 @@ it('uses the Responses API with tools for a reasoning model', async () => {
   const request = JSON.parse(String(network.mock.calls[0][1]?.body));
   expect(request.model).toBe('gpt-6.1-sol');
   expect(request.tools.length).toBeGreaterThan(0);
-  expect(request.max_output_tokens).toBe(2200);
+  expect(request.max_output_tokens).toBe(65536);
   expect(request.store).toBe(false);
   expect(request.include).toEqual(['reasoning.encrypted_content']);
   expect(request.max_completion_tokens).toBeUndefined();
+  // A native Responses target refuses `max_tokens` (issue #23).
+  expect(request.max_tokens).toBeUndefined();
   expect(request.messages).toBeUndefined();
   expect(request.reasoning_effort).toBeUndefined();
   expect(events).toEqual(

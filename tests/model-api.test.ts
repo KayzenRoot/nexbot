@@ -62,7 +62,7 @@ describe('model options', () => {
 
   it('uses the Responses budget, stateless storage and encrypted reasoning', () => {
     expect(modelOptionsFor('responses')).toEqual({
-      max_output_tokens: 2200,
+      max_output_tokens: 65536,
       store: false,
       include: ['reasoning.encrypted_content'],
     });

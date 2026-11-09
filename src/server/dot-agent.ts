@@ -372,14 +372,23 @@ export class DotAgent extends AbstractAgent {
           maxRetries: 1,
           // Reasoning models spend output tokens thinking before answering, so
           // without an explicit budget the provider defaults too low and the
-          // response truncates mid-tool-loop.
+          // response truncates mid-tool-loop. The Responses API has no
+          // `max_tokens` — sending it gets the request refused — and counts
+          // reasoning against `max_output_tokens` instead.
           fetch: (input, init) => {
             const parsed =
               init?.body && typeof init.body === 'string'
                 ? JSON.parse(init.body)
                 : undefined;
-            if (parsed && parsed.max_tokens === undefined)
-              parsed.max_tokens = 65536;
+            if (parsed) {
+              if (modelApi === 'responses') {
+                delete parsed.max_tokens;
+                if (parsed.max_output_tokens === undefined)
+                  parsed.max_output_tokens = 65536;
+              } else if (parsed.max_tokens === undefined) {
+                parsed.max_tokens = 65536;
+              }
+            }
             return fetch(input, {
               ...init,
               body: parsed ? JSON.stringify(parsed) : init?.body,

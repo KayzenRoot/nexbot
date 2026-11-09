@@ -51,7 +51,9 @@ export function modelOptionsFor(
 ): Record<string, unknown> {
   return api === 'responses'
     ? {
-        max_output_tokens: 2200,
+        // Same generous budget as Chat Completions: reasoning counts against
+        // it, and the desk's analyses spend 2-3k tokens reasoning first.
+        max_output_tokens: 65536,
         store: false,
         include: ['reasoning.encrypted_content'],
       }
