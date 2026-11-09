@@ -29,7 +29,11 @@ export class ComputerService {
     private config: PlatformConfig,
     private paused: () => boolean,
     private transport: typeof fetch = fetch,
-    private deadlineMs = 70000,
+    // The first start also extracts the computer image (hundreds of MB) and
+    // creates the per-Dot volumes, which on a cold host regularly exceeds two
+    // minutes; later starts answer in seconds. The per-action timeouts
+    // (exec etc.) are enforced by the supervisor independently.
+    private deadlineMs = 180000,
   ) {}
   get configured() {
     return !!(
