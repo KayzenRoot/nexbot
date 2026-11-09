@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from './api';
 import { useTranslation } from './i18n';
+import { PROVIDER_PRESETS, isOllama } from './model-presets';
 
 type Saved =
   { configured: false } | { baseUrl: string; model: string; hasKey: true };
@@ -34,6 +35,14 @@ export function ModelSettings() {
   }, []);
 
   const body = () => JSON.stringify({ baseUrl, model, apiKey });
+
+  const applyPreset = (id: (typeof PROVIDER_PRESETS)[number]['id']) => {
+    const preset = PROVIDER_PRESETS.find((candidate) => candidate.id === id);
+    if (!preset) return;
+    setBaseUrl(preset.baseUrl);
+    setModel(preset.model);
+    setStatus(null);
+  };
 
   const test = async () => {
     setStatus({ tone: 'busy', text: t('model.testing') });
@@ -82,6 +91,19 @@ export function ModelSettings() {
           ? t('model.connected', { model: saved.model })
           : t('model.choose')}
       </p>
+      <div className="model-presets">
+        <span>{t('model.presetLabel')}</span>
+        {PROVIDER_PRESETS.map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            className="secondary"
+            onClick={() => applyPreset(preset.id)}
+          >
+            {t(`model.preset.${preset.id}`)}
+          </button>
+        ))}
+      </div>
       <label className="field">
         <span>{t('model.baseUrl')}</span>
         <input
@@ -91,6 +113,11 @@ export function ModelSettings() {
           spellCheck={false}
         />
       </label>
+      {isOllama(baseUrl) && (
+        <p className="muted" role="note">
+          {t('model.ollamaHint')}
+        </p>
+      )}
       <label className="field">
         <span>{t('model.model')}</span>
         <input

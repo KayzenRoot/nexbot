@@ -377,6 +377,12 @@ export const en = {
   'model.connected':
     'Connected to {model}. The key is stored encrypted and is not shown again.',
   'model.choose': 'Choose the provider your conversations will use.',
+  'model.presetLabel': 'Presets',
+  'model.preset.opencode': 'OpenCode Go',
+  'model.preset.openai': 'OpenAI',
+  'model.preset.ollama': 'Ollama (local)',
+  'model.ollamaHint':
+    'Ollama runs on your machine. With the Docker install use http://host.docker.internal:11434/v1; in development use http://localhost:11434/v1. Any key with 8 or more characters works — Ollama ignores it.',
   'model.baseUrl': 'Base URL',
   'model.model': 'Model',
   'model.apiKey': 'API key',

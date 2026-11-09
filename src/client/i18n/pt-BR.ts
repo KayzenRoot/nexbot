@@ -378,6 +378,12 @@ export const ptBR: Record<keyof typeof en, string> = {
   'model.connected':
     'Conectado a {model}. A chave é guardada criptografada e não é mostrada de novo.',
   'model.choose': 'Escolha o provedor que suas conversas vão usar.',
+  'model.presetLabel': 'Predefinições',
+  'model.preset.opencode': 'OpenCode Go',
+  'model.preset.openai': 'OpenAI',
+  'model.preset.ollama': 'Ollama (local)',
+  'model.ollamaHint':
+    'O Ollama roda na sua máquina. Na instalação Docker use http://host.docker.internal:11434/v1; no modo de desenvolvimento use http://localhost:11434/v1. Qualquer chave com 8 ou mais caracteres funciona — o Ollama ignora a chave.',
   'model.baseUrl': 'URL base',
   'model.model': 'Modelo',
   'model.apiKey': 'Chave da API',
