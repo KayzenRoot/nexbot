@@ -65,7 +65,14 @@ it('refuses to delete a Dot that still has conversations and removes a spent Dot
   ]);
   store.bindThread('thread-1', doomed.id, 'Design research');
   store.pages.create(shared.id, { title: 'Shared page', content: 'Body' });
-  store.computers.patch(doomed.id, { enabled: true, browser: true });
+  // Distinct from the default so the assertion below proves the row was
+  // removed with the Dot rather than reset to the fallback.
+  store.computers.patch(doomed.id, {
+    enabled: true,
+    browser: true,
+    files: false,
+    shell: false,
+  });
   store.connections.create(
     doomed.id,
     { name: 'GitHub', url: 'https://example.com/mcp' },
@@ -98,7 +105,12 @@ it('refuses to delete a Dot that still has conversations and removes a spent Dot
   expect(store.computers.permissions(keeper.id).enabled).toBe(true);
   expect(store.connections.list(keeper.id)).toHaveLength(1);
   expect(store.connections.list(doomed.id)).toHaveLength(0);
-  expect(store.computers.permissions(doomed.id).enabled).toBe(false);
+  expect(store.computers.permissions(doomed.id)).toEqual({
+    enabled: true,
+    browser: true,
+    files: true,
+    shell: true,
+  });
   expect(store.deleteDot('missing')).toBe(false);
   store.close();
 });
