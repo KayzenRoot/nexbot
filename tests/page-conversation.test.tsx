@@ -7,6 +7,10 @@ vi.mock('../src/client/api', () => ({ api }));
 vi.mock('../src/client/Chat', () => ({ Chat: () => null }));
 import { PageConversation } from '../src/client/PageConversation';
 import { Chat } from '../src/client/Chat';
+import { setLocalePreference } from '../src/client/i18n';
+
+// The assertions cover the English copy; pin it regardless of the machine.
+setLocalePreference('en');
 
 const dot = {
   id: 'dot-a',
@@ -16,6 +20,8 @@ const dot = {
   instructions: '',
   researchAllowed: true,
   memoryAllowed: true,
+  appsAllowed: false,
+  composioToolkits: [],
   createdAt: 0,
 };
 const thread: Conversation = {
@@ -47,6 +53,7 @@ const props = () => ({
       model: true,
       browser: false,
       voice: false,
+      composio: false,
       slack: 'not_configured',
       missing: [],
     },

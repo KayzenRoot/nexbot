@@ -88,6 +88,8 @@ it('keeps page chat inside its sidebar across desktop and stacked widths', async
                 instructions: 'Review notes',
                 researchAllowed: false,
                 memoryAllowed: false,
+                appsAllowed: false,
+                composioToolkits: [],
                 createdAt: 0,
               }}
               onConsumed={() => {}}
